@@ -105,7 +105,9 @@ async function main() {
   // ── Step 1: Session ─────────────────────────────────────────────────────────
   console.log('\n[1/3] Session setup...');
 
-  const browser = await chromium.launch({ headless: false, channel: 'chrome' }); // visible, system Chrome — easier to debug
+  const discoverLaunchOpts = { headless: false }; // visible — easier to debug
+  if (process.env.PLAYWRIGHT_CHANNEL) discoverLaunchOpts.channel = process.env.PLAYWRIGHT_CHANNEL;
+  const browser = await chromium.launch(discoverLaunchOpts);
 
   let context;
   if (hasSavedSession) {
