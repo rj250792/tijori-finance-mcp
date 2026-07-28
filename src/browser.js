@@ -1,11 +1,34 @@
 import { chromium } from 'playwright';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SESSION_PATH = join(__dirname, '..', 'output', 'session.json');
 const BASE_URL = 'https://www.tijorifinance.com';
+
+// Loads Playwright storageState from output/session.json for local dev (created by
+// discover.js), or builds it directly from env vars for a deployed environment where
+// no local session file exists (TIJORI_SESSION_ID / TIJORI_CSRF_TOKEN).
+function loadStorageState() {
+  if (existsSync(SESSION_PATH)) {
+    return JSON.parse(readFileSync(SESSION_PATH, 'utf-8'));
+  }
+
+  const sessionId = process.env.TIJORI_SESSION_ID;
+  const csrfToken = process.env.TIJORI_CSRF_TOKEN;
+  if (!sessionId) {
+    throw new Error('No output/session.json and TIJORI_SESSION_ID is not set. Run discover.js locally, or set TIJORI_SESSION_ID (and TIJORI_CSRF_TOKEN) as env vars.');
+  }
+
+  const cookies = [
+    { name: 'sessionid', value: sessionId, domain: '.tijorifinance.com', path: '/', expires: -1, httpOnly: true, secure: true, sameSite: 'Lax' },
+  ];
+  if (csrfToken) {
+    cookies.push({ name: 'csrftoken', value: csrfToken, domain: '.tijorifinance.com', path: '/', expires: -1, httpOnly: false, secure: true, sameSite: 'Lax' });
+  }
+  return { cookies, origins: [] };
+}
 
 // Default navigation timeout. domcontentloaded fires fast; the per-tool readiness
 // wait (waitFor selector) is what actually gates parsing, so this is just a ceiling.
@@ -53,7 +76,7 @@ async function ensureBrowser() {
     if (process.env.PLAYWRIGHT_CHANNEL) launchOpts.channel = process.env.PLAYWRIGHT_CHANNEL;
     const browser = await chromium.launch(launchOpts);
     const context = await browser.newContext({
-      storageState: JSON.parse(readFileSync(SESSION_PATH, 'utf-8')),
+      storageState: loadStorageState(),
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       viewport: { width: 1440, height: 900 },
     });

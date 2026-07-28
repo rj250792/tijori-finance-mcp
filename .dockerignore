@@ -1,0 +1,10 @@
+node_modules
+output
+.env
+.git
+*.log
+MCP_.mp4
+filter_modal.png
+filter_page.png
+docs
+test
