@@ -105,7 +105,7 @@ async function main() {
   // ── Step 1: Session ─────────────────────────────────────────────────────────
   console.log('\n[1/3] Session setup...');
 
-  const browser = await chromium.launch({ headless: false }); // visible — easier to debug
+  const browser = await chromium.launch({ headless: false, channel: 'chrome' }); // visible, system Chrome — easier to debug
 
   let context;
   if (hasSavedSession) {

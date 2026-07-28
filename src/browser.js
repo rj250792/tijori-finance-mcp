@@ -49,7 +49,7 @@ async function ensureBrowser() {
 
   _initPromise = (async () => {
     process.stderr.write('[tijori-mcp] launched Chromium\n');
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ headless: true, channel: 'chrome' });
     const context = await browser.newContext({
       storageState: JSON.parse(readFileSync(SESSION_PATH, 'utf-8')),
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
