@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PurpleFinance — India's equity research, in Claude</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0B0E12;
+    --surface: #12161C;
+    --surface-2: #171C24;
+    --border: #262C36;
+    --border-soft: #1C222B;
+    --text: #E7E9EC;
+    --text-dim: #8B93A1;
+    --text-faint: #545C68;
+    --accent: #9B6BFF;
+    --accent-soft: #5B3F99;
+    --accent-wash: rgba(155, 107, 255, 0.10);
+    --positive: #5FBE85;
+    --negative: #E07A6E;
+
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  body { min-width: 0; }
+
+  a { color: inherit; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+
+  ::selection { background: var(--accent-wash); color: var(--accent); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(11, 14, 18, 0.88);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .topbar .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+  .brand .mark {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    display: inline-block;
+    border-radius: 50%;
+    transform: translateY(-1px);
+  }
+  .brand b { color: var(--text); font-weight: 600; }
+  .brand span { color: var(--text-faint); }
+
+  .navlinks {
+    display: flex;
+    gap: 28px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+  .navlinks a { text-decoration: none; }
+  .navlinks a:hover { color: var(--accent); }
+  .navlinks .cta {
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 3px;
+  }
+  .navlinks .cta:hover { border-color: var(--accent-soft); color: var(--accent); }
+
+  @media (max-width: 720px) {
+    .navlinks a:not(.cta) { display: none; }
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 88px 0 96px;
+    border-bottom: 1px solid var(--border-soft);
+    background:
+      linear-gradient(180deg, var(--accent-wash), transparent 340px);
+  }
+  .hero .wrap {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .hero .wrap { grid-template-columns: 1fr; }
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 20px; height: 1px;
+    background: var(--accent-soft);
+  }
+
+  .hero h1 {
+    font-size: clamp(34px, 4.6vw, 52px);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero .sub {
+    margin-top: 22px;
+    font-size: 16.5px;
+    line-height: 1.65;
+    color: var(--text-dim);
+    max-width: 46ch;
+  }
+
+  .hero .ctas {
+    margin-top: 34px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: var(--mono);
+    font-size: 13px;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    transition: border-color .15s ease, background .15s ease, color .15s ease;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #14101F;
+    font-weight: 600;
+  }
+  .btn.primary:hover { background: #AC85FF; }
+  .btn.ghost {
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+  .btn.ghost:hover { border-color: var(--accent-soft); color: var(--text); }
+
+  .hero .fineprint {
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+
+  /* ---------- Terminal card ---------- */
+  .term {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -30px rgba(0,0,0,0.6);
+  }
+  .term .bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--surface-2);
+  }
+  .term .bar span {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .term .bar label {
+    margin-left: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+  .term .body {
+    padding: 20px 18px 22px;
+    font-family: var(--mono);
+    font-size: 12.8px;
+    line-height: 1.7;
+    min-height: 210px;
+  }
+  .term .prompt { color: var(--text-faint); }
+  .term .query {
+    color: var(--text);
+  }
+  .term .cursor {
+    display: inline-block;
+    width: 7px; height: 14px;
+    background: var(--accent);
+    transform: translateY(2px);
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .term .out { color: var(--text-dim); margin-top: 14px; }
+  .term .out .k { color: var(--accent); }
+  .term .out .tool {
+    color: var(--positive);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { animation: none; }
+  }
+
+  /* ---------- Section scaffolding ---------- */
+  section { padding: 76px 0; border-bottom: 1px solid var(--border-soft); }
+  section:last-of-type { border-bottom: none; }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .section-head h2 { font-size: 28px; }
+  .section-head .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .lede {
+    max-width: 66ch;
+    color: var(--text-dim);
+    font-size: 15.5px;
+    line-height: 1.75;
+  }
+
+  /* ---------- Why / comparison ---------- */
+  .why-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 48px;
+  }
+  @media (max-width: 860px) { .why-grid { grid-template-columns: 1fr; } }
+
+  .why-grid .lede { max-width: none; }
+  .why-grid .lede + .lede { margin-top: 16px; }
+  blockquote {
+    margin: 24px 0 0;
+    padding-left: 16px;
+    border-left: 2px solid var(--accent-soft);
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 15px;
+  }
+  blockquote cite { display: block; margin-top: 8px; font-style: normal; font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  .cmp-table th, .cmp-table td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: top;
+  }
+  .cmp-table thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 400;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmp-table tbody th {
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .cmp-table td { color: var(--text-dim); }
+  .cmp-table .yes { color: var(--positive); }
+  .cmp-table .no { color: var(--negative); }
+  .cmp-table tr.us { background: var(--accent-wash); }
+  .cmp-table tr.us th { color: var(--accent); }
+  .table-scroll { overflow-x: auto; }
+
+  /* ---------- Tools ledger ---------- */
+  .ledger-group + .ledger-group { margin-top: 44px; }
+  .ledger-group h3 {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 400;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ledger-group h3 .tag {
+    color: var(--accent);
+    border: 1px solid var(--accent-soft);
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10.5px;
+  }
+  .ledger-row {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    padding: 14px 0;
+    border-top: 1px solid var(--border-soft);
+  }
+  @media (max-width: 640px) { .ledger-row { grid-template-columns: 1fr; gap: 4px; } }
+  .ledger-row code {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+  .ledger-row p { color: var(--text-dim); font-size: 13.5px; line-height: 1.6; }
+
+  /* ---------- In action ---------- */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .action-grid { grid-template-columns: 1fr; } }
+  .action-card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 18px 18px 20px;
+  }
+  .action-card .step {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+  .action-card h4 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 17px;
+    margin: 0 0 10px;
+  }
+  .action-card pre {
+    font-family: var(--mono);
+    font-size: 11.8px;
+    line-height: 1.65;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    margin: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+  .action-card pre .k { color: var(--accent); }
+  .action-card pre .tool { color: var(--positive); }
+
+  /* ---------- Stats row ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--surface);
+    padding: 22px 20px;
+  }
+  .stat .n {
+    font-family: var(--mono);
+    font-size: 24px;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .l {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+
+  /* ---------- Pricing ---------- */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .pricing-grid { grid-template-columns: 1fr; } }
+  .price-card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 26px 22px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .price-card.featured {
+    border-color: var(--accent-soft);
+    background: linear-gradient(180deg, var(--accent-wash), var(--surface) 160px);
+  }
+  .price-card .tier {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .price-card.featured .tier { color: var(--accent); }
+  .price-card h4 { font-family: var(--serif); font-weight: 400; font-size: 19px; margin: 8px 0 0; }
+  .price-card .amt {
+    font-family: var(--mono);
+    font-size: 30px;
+    color: var(--text);
+    margin-top: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .price-card .amt span { font-size: 13px; color: var(--text-faint); font-family: var(--sans); }
+  .price-card p.desc { color: var(--text-dim); font-size: 13px; margin-top: 10px; line-height: 1.6; }
+  .price-card ul { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .price-card li { font-size: 12.8px; color: var(--text-dim); padding-left: 16px; position: relative; }
+  .price-card li::before { content: "—"; position: absolute; left: 0; color: var(--text-faint); }
+  .price-card .btn { margin-top: 22px; justify-content: center; }
+  .pricing-note {
+    margin-top: 22px;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: var(--mono);
+  }
+
+  /* ---------- Setup ---------- */
+  .setup-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .setup-step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 20px;
+    padding: 22px 0;
+    border-top: 1px solid var(--border-soft);
+  }
+  .setup-step:last-child { border-bottom: 1px solid var(--border-soft); }
+  .setup-step .idx {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .setup-step h4 { font-family: var(--sans); font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .setup-step p { color: var(--text-dim); font-size: 13.5px; line-height: 1.65; max-width: 60ch; }
+  .setup-step .code {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 10px 13px;
+    color: var(--text-dim);
+    overflow-x: auto;
+  }
+  .setup-step .code .c { color: var(--text-faint); }
+
+  /* ---------- Footer ---------- */
+  footer { padding: 40px 0 60px; }
+  footer .wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  footer .disclaimer {
+    max-width: 52ch;
+    font-size: 12.5px;
+    color: var(--text-faint);
+    line-height: 1.7;
+  }
+  footer .links {
+    display: flex;
+    gap: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  footer .links a { text-decoration: none; }
+  footer .links a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <span class="mark" aria-hidden="true"></span>
+      <b>PURPLE</b><span>FINANCE</span>
+    </a>
+    <nav class="navlinks">
+      <a href="#tools">Tools</a>
+      <a href="#why">Why</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#setup">Setup</a>
+      <a class="cta" href="https://github.com/rj250792/tijori-finance-mcp" target="_blank" rel="noopener">View on GitHub</a>
+    </nav>
+  </div>
+</div>
+
+<div id="top" class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Model Context Protocol · Indian equities</div>
+      <h1>PurpleFinance puts India's<br>equity research inside <em>Claude</em>.</h1>
+      <p class="sub">
+        Talk to 5,000+ NSE and BSE listed companies without leaving the conversation. Financials, shareholding, concall transcripts, screener queries across ~1,500 metrics — built on an open-source MCP server, with your own Tijori Finance login. Self-host it free, or let us set it up and run it for you.
+      </p>
+      <div class="ctas">
+        <a class="btn primary" href="#pricing">See pricing →</a>
+        <a class="btn ghost" href="#tools">See the tools</a>
+      </div>
+      <p class="fineprint">Free to self-host · guided setup from ₹1,999 · managed from ₹999/mo</p>
+    </div>
+
+    <div class="term" role="img" aria-label="Terminal demo of a Tijori Finance query and structured tool response">
+      <div class="bar">
+        <span></span><span></span><span></span>
+        <label>claude — purplefinance</label>
+      </div>
+      <div class="body">
+        <div class="prompt">&gt; </div>
+        <div class="query" id="typeTarget"></div>
+        <div class="out" id="typeOut" style="opacity:0"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="why">
+  <div class="wrap why-grid">
+    <div>
+      <div class="eyebrow">Why this exists</div>
+      <h2 style="font-size:24px;">No structured data existed for the Indian market.</h2>
+      <blockquote>
+        The goal is to turn data into information, and information into insight.
+        <cite>— Carly Fiorina</cite>
+      </blockquote>
+    </div>
+    <div>
+      <p class="lede">Most financial MCP servers are built around US markets — Yahoo Finance, SEC filings, S&amp;P data. Tijori Finance is the most comprehensive source for Indian equities: operational KPIs, segment-level revenue breakdowns, market share trends, and curated investor documents that aren't published anywhere else. This server exposes all of it to Claude directly.</p>
+      <div class="table-scroll" style="margin-top:26px;">
+        <table class="cmp-table">
+          <thead>
+            <tr><th>Feature</th><th>Traditional research</th><th>Bloomberg / Refinitiv</th></tr>
+          </thead>
+          <tbody>
+            <tr class="us"><th>Tijori Finance MCP</th><td colspan="2">Setup: 5 minutes · Free + Tijori subscription</td></tr>
+            <tr><th>Setup time</th><td>Hours (Python, Excel…)</td><td>Weeks (contracts)</td></tr>
+            <tr><th>Indian coverage</th><td class="no">Fragmented, manual</td><td class="yes">Yes</td></tr>
+            <tr><th>Operational KPIs</th><td class="no">Manual scraping</td><td class="yes">Proprietary</td></tr>
+            <tr><th>Concall transcripts</th><td class="no">PDF hunting</td><td>Partial</td></tr>
+            <tr><th>Output</th><td class="no">Unstructured pages</td><td class="no">Proprietary only</td></tr>
+            <tr><th>API keys required</th><td>Multiple (OpenAI, etc.)</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Every tool, in one ledger.</h2>
+      <span class="num">16 + 3 tools</span>
+    </div>
+    <p class="lede" style="margin-bottom:8px;">Sixteen v1 tools cover search, financials, and documents. Three v2 tools add a full screener over Tijori's ~1,500-metric field catalog.</p>
+
+    <div class="ledger-group">
+      <h3>Search &amp; company data <span class="tag">v1 — stable</span></h3>
+      <div class="ledger-row"><code>search_company</code><p>Search any company by name, returns its slug.</p></div>
+      <div class="ledger-row"><code>get_company_overview</code><p>Key ratios, forensics score, market cap, PE, ROE, ROCE.</p></div>
+      <div class="ledger-row"><code>get_financials</code><p>P&amp;L, balance sheet, cash flow, ratios, quarterly results.</p></div>
+      <div class="ledger-row"><code>get_shareholding</code><p>10-quarter promoter / FII / DII / public breakdown.</p></div>
+      <div class="ledger-row"><code>get_operational_metrics</code><p>All operational KPIs with full historical time series.</p></div>
+      <div class="ledger-row"><code>get_fund_flow</code><p>Capital allocation breakdown over 1/3/5/7/10 years.</p></div>
+      <div class="ledger-row"><code>get_revenue_mix</code><p>Segment breakdown with historical trend per segment.</p></div>
+      <div class="ledger-row"><code>get_market_share</code><p>Market share % per metric, with as-of date.</p></div>
+    </div>
+
+    <div class="ledger-group">
+      <h3>Documents, markets &amp; macro <span class="tag">v1 — stable</span></h3>
+      <div class="ledger-row"><code>get_knowledge_base</code><p>Annual reports, earnings releases, investor decks, concalls — URLs grouped by type.</p></div>
+      <div class="ledger-row"><code>fetch_document</code><p>Pulls full text from a PDF returned by <code style="font-size:12px;">get_knowledge_base</code>, through the authenticated session.</p></div>
+      <div class="ledger-row"><code>get_raw_materials</code><p>Commodity price performance — chemicals, spreads, metals.</p></div>
+      <div class="ledger-row"><code>get_macro_indicators</code><p>India macro — credit, IIP, GST, auto sales, GDP, trade.</p></div>
+      <div class="ledger-row"><code>get_markets</code><p>Index performance — Nifty, sector indices, conglomerates.</p></div>
+      <div class="ledger-row"><code>get_sector_constituents</code><p>All stocks inside a TJI niche sector index, with weights and 1D–10Y returns.</p></div>
+      <div class="ledger-row"><code>get_conglomerate_constituents</code><p>All companies inside a business group, with 1D–10Y returns.</p></div>
+      <div class="ledger-row"><code>resolve_company_ids</code><p>Resolve a slug to its numeric company ID.</p></div>
+    </div>
+
+    <div class="ledger-group">
+      <h3>Screener <span class="tag">v2 — stable</span></h3>
+      <div class="ledger-row"><code>list_popular_screens</code><p>Browse Tijori's pre-built screens by category, with each screen's underlying query.</p></div>
+      <div class="ledger-row"><code>screen_companies</code><p>Run a preset or write your own query — <code style="font-size:12px;">%</code> values, field comparisons, arithmetic like <code style="font-size:12px;">capex/Net Block &gt; 0.5</code>, plus business queries like <code style="font-size:12px;">market share &gt; 50</code>.</p></div>
+      <div class="ledger-row"><code>search_screener_fields</code><p>Search the ~1,500-metric catalog — including time-period variants like <code style="font-size:12px;">3yr Avg ROCE</code> — for exact field names.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What a session looks like.</h2>
+      <span class="num">three real workflows</span>
+    </div>
+    <div class="action-grid">
+      <div class="action-card">
+        <div class="step">Cross-tool deep dive</div>
+        <h4>Revenue mix → P&amp;L</h4>
+        <pre>&gt; Pull Zomato's revenue mix,
+  then cross-check it against
+  their P&amp;L to explain the trend
+
+<span class="tool">get_revenue_mix</span>(slug)
+<span class="tool">get_financials</span>(slug, "quarterly")
+<span class="k">→</span> segment trend + margin read</pre>
+      </div>
+      <div class="action-card">
+        <div class="step">Single-call history</div>
+        <h4>Full P&amp;L, one call</h4>
+        <pre>&gt; IndiGo's revenue, EBITDA
+  and PAT across the last
+  6 years
+
+<span class="tool">get_financials</span>(slug, "annual")
+<span class="k">→</span> full income statement,
+   FY-by-FY, in one response</pre>
+      </div>
+      <div class="action-card">
+        <div class="step">Document → model</div>
+        <h4>Concall → projection</h4>
+        <pre>&gt; Read MTAR's latest concall
+  and build a forward
+  projection off management's
+  guidance
+
+<span class="tool">get_knowledge_base</span>(slug)
+<span class="tool">fetch_document</span>(url)
+<span class="k">→</span> transcript read, model built</pre>
+      </div>
+    </div>
+
+    <div class="stats" style="margin-top:44px;">
+      <div class="stat"><div class="n">5,000+</div><div class="l">Mainboard companies</div></div>
+      <div class="stat"><div class="n">1,050+</div><div class="l">SME-listed companies</div></div>
+      <div class="stat"><div class="n">~1,500</div><div class="l">Screener metrics</div></div>
+      <div class="stat"><div class="n">6 hrs</div><div class="l">Financials cache window</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Pick how hands-on you want to be.</h2>
+      <span class="num">every tier, your own Tijori login</span>
+    </div>
+    <p class="lede" style="margin-bottom:32px;">PurpleFinance sells the setup and upkeep of the server — never Tijori's underlying data. Every plan runs on your own Tijori Finance account; we don't resell or redistribute what it returns.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="tier">Self-setup</div>
+        <h4>Free</h4>
+        <div class="amt">₹0</div>
+        <p class="desc">Run it yourself. Full source, MIT licensed — the setup wizard walks you through it end to end.</p>
+        <ul>
+          <li>Full source on GitHub</li>
+          <li>All 19 tools, v1 and v2</li>
+          <li>Community support via issues</li>
+        </ul>
+        <a class="btn ghost" href="https://github.com/rj250792/tijori-finance-mcp" target="_blank" rel="noopener">Get the code</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="tier">Guided setup</div>
+        <h4>One-time</h4>
+        <div class="amt">₹1,999</div>
+        <p class="desc">We install it with you — Node, the wizard, your Tijori login, Claude Desktop — until "Search Tata Steel" actually returns a result.</p>
+        <ul>
+          <li>Everything in Self-setup</li>
+          <li>Live setup session</li>
+          <li>7 days of setup support</li>
+        </ul>
+        <a class="btn primary" href="mailto:rj250792@gmail.com?subject=PurpleFinance%20%E2%80%94%20Guided%20Setup">Reserve a spot →</a>
+      </div>
+
+      <div class="price-card">
+        <div class="tier">Managed hosting</div>
+        <h4>Monthly</h4>
+        <div class="amt">₹999<span>/mo</span></div>
+        <p class="desc">We run the server for you in the cloud and keep the session alive, re-authenticating when Tijori logs you out — no computer left running.</p>
+        <ul>
+          <li>Everything in Guided setup</li>
+          <li>Hosted 24/7, auto-reauth</li>
+          <li>Priority email support</li>
+        </ul>
+        <a class="btn ghost" href="mailto:rj250792@gmail.com?subject=PurpleFinance%20%E2%80%94%20Managed%20Hosting">Reserve a spot →</a>
+      </div>
+    </div>
+    <p class="pricing-note">Payments aren't live yet — "Reserve a spot" opens an email instead of a charge. Prices are launch estimates, not final.</p>
+  </div>
+</section>
+
+<section id="setup">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Set up in one pass.</h2>
+      <span class="num">~5 minutes</span>
+    </div>
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="idx">01</div>
+        <div>
+          <h4>Install Node.js and Claude Desktop</h4>
+          <p>Node.js v18+ (LTS) and the Claude Desktop app. Both free, both quick installs.</p>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="idx">02</div>
+        <div>
+          <h4>Clone the repo and run the setup wizard</h4>
+          <p>Handles package installs, downloads the browser, authenticates with Tijori, and writes the Claude Desktop config for you.</p>
+          <div class="code"><span class="c">$</span> git clone https://github.com/rj250792/tijori-finance-mcp.git<br><span class="c">$</span> cd tijori-finance-mcp<br><span class="c">$</span> node setup.js</div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="idx">03</div>
+        <div>
+          <h4>Log in through the browser window that opens</h4>
+          <p>A real Tijori Finance sign-in — free accounts work with data limits, Pro is recommended for full access. The session is saved locally so this happens once.</p>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="idx">04</div>
+        <div>
+          <h4>Fully quit and reopen Claude Desktop</h4>
+          <p>Not just close the window — quit it, then relaunch. That's what loads the server. Then try: <em style="font-family:var(--serif); color:var(--text);">"Search Tata Steel using Tijori MCP"</em>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="disclaimer">
+      PurpleFinance is an independent, unofficial project — not affiliated with or endorsed by Tijori Finance. Every plan requires your own paid Tijori Finance subscription; we never resell or redistribute the underlying data. For personal research use.
+    </p>
+    <div class="links">
+      <a href="https://github.com/rj250792/tijori-finance-mcp" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://tijorifinance.com" target="_blank" rel="noopener">Tijori Finance</a>
+      <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var target = document.getElementById('typeTarget');
+    var out = document.getElementById('typeOut');
+    var query = "Crude is up — check raw materials for chemical spreads, then pull revenue mix for Deepak Nitrite.";
+    var outHTML = '<span class="k">get_raw_materials</span>() → chemical spreads<br>' +
+                  '<span class="tool">get_revenue_mix</span>("deepak-nitrite") → segment trend<br>' +
+                  '<span class="k">→</span> margin exposure read';
+
+    if (reduce) {
+      target.textContent = query;
+      out.innerHTML = outHTML;
+      out.style.opacity = 1;
+      return;
+    }
+
+    var i = 0;
+    function type() {
+      if (i <= query.length) {
+        target.innerHTML = query.slice(0, i) + '<span class="cursor"></span>';
+        i++;
+        setTimeout(type, 18 + Math.random() * 22);
+      } else {
+        target.innerHTML = query;
+        out.innerHTML = outHTML;
+        out.style.transition = 'opacity .5s ease';
+        requestAnimationFrame(function () { out.style.opacity = 1; });
+      }
+    }
+    setTimeout(type, 500);
+  })();
+</script>
+</body>
+</html>
